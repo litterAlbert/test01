@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聊天界面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        #chat-container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        #messages {
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+            border-bottom: 1px solid #ddd;
+        }
+        #messages div {
+            margin-bottom: 10px;
+        }
+        #messages .user {
+            text-align: right;
+            color: blue;
+        }
+        #messages .bot {
+            text-align: left;
+            color: green;
+        }
+        #input-area {
+            display: flex;
+            padding: 10px;
+        }
+        #input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        #send-button {
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        #send-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+<div id="chat-container">
+    <div id="messages"></div>
+    <div id="input-area">
+        <input type="text" id="input" placeholder="请输入您的问题..." />
+        <button id="send-button">发送</button>
+    </div>
+</div>
+
+<script>
+    document.getElementById('send-button').addEventListener('click', sendMessage);
+
+    // 监听输入框的键盘事件
+    document.getElementById('input').addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+            sendMessage(); // 按下回车时发送消息
+        }
+    });
+
+    async function sendMessage() {
+        const input = document.getElementById('input');
+        const question = input.value.trim();
+        if (!question) return;
+
+        // 显示用户输入
+        appendMessage(question, 'user');
+        input.value = '';
+
+        try {
+            // 发送请求到后端
+            const response = await fetch('/nlp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/plain',
+                },
+                body: question,
+            });
+
+            if (response.ok) {
+                const answer = await response.text();
+                appendMessage(answer, 'bot');
+            } else {
+                appendMessage('抱歉，发生错误。', 'bot');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            appendMessage('网络错误，请稍后再试。', 'bot');
+        }
+    }
+
+    function appendMessage(message, type) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = type;
+        messageDiv.textContent = message;
+        document.getElementById('messages').appendChild(messageDiv);
+        document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight; // 滚动到最底部
+    }
+</script>
+
+</body>
+</html>
